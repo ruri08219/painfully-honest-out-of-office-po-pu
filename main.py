@@ -10,6 +10,7 @@ import sys
 ENTRY = "Thank you for your email \u2014 I am away until Monday, and with 412 unread messages ahead of yours, I will answer the urgent ones first, starting with the one that says this can wait."
 
 MAX_CHARS = 200
+MAX_BYTES = 600
 
 
 def check_length(text):
@@ -25,6 +26,8 @@ def check_entry(text):
     if text != text.strip():
         raise ValueError("entry must not have leading or trailing whitespace")
     check_length(text)
+    if len(text.encode("utf-8")) > MAX_BYTES:
+        raise ValueError("entry is %d bytes, over the %d-byte limit" % (len(text.encode("utf-8")), MAX_BYTES))
     if not text.endswith("."):
         raise ValueError("entry must end with a period")
     body = text[:-1]
@@ -42,6 +45,9 @@ def main():
     path = os.path.join(out_dir, "entry.txt")
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(ENTRY)
+    with open(path, "r", encoding="utf-8", newline="") as f:
+        if f.read() != ENTRY:
+            raise ValueError("round-trip verify failed: written file differs from ENTRY")
     print("wrote %s (%d chars)" % (path, len(ENTRY)))
     return 0
 
